@@ -19,7 +19,14 @@
         .search-area button { padding: 10px 20px; background-color: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; flex-shrink: 0; min-width: 80px; }
         .search-area button:hover { background-color: #1d4ed8; }
         .alert { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.95rem; display: none; }
-        h2 { color: #0f172a; margin-top: 0; padding-bottom: 10px; }
+        
+        .header-area { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+        h2 { color: #0f172a; margin: 0; }
+        .about-link { color: #333; text-decoration: none; font-size: 0.85em; }
+        .about-link:hover { text-decoration: underline; }
+        
+        .season-meaning-header { font-size: 0.95rem; color: #64748b; margin-bottom: 20px; }
+
         .section-title { font-weight: bold; color: #334155; margin-top: 20px; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; }
         .data-list { padding-left: 20px; margin-top: 10px; }
         .meta { margin-top: 20px; font-size: 0.95rem; border-top: 1px dashed #cbd5e1; padding-top: 15px; }
@@ -27,19 +34,17 @@
         .hymn-list { margin-top: 5px; }
         .hymn-list ul { list-style: none; padding-left: 0px; margin: 5px 0; }
         .hymn-list li { margin-bottom: 4px; }
-        .color-circle {
+
+        /* 3. 新增節日標題徽章 (Badge) 樣式 */
+        .title-badge {
             display: inline-block;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            margin-right: 5px;
-            vertical-align: middle;
-            border: 1px solid #cbd5e1;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 1.17em; /* h3 size */
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .header-area { border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; padding-bottom: 10px; }
-        .about-link { margin-top: -5px; margin-bottom: 15px; display: block; color: #333; text-decoration: none; font-size: 0.85em; }
-        .about-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -49,6 +54,8 @@
         <h2>中文三代經課</h2>
         <a href="about_church_year.html" class="about-link">關於教會年</a>
     </div>
+    
+    <div id="seasonMeaningHeader" class="season-meaning-header"></div>
     
     <div class="search-area">
         <input type="date" id="dateInput" oninput="document.getElementById('keywordInput').value=''" title="選擇日期">
@@ -74,11 +81,19 @@
         return new Date(dateObj - tzOffset).toISOString().split('T')[0];
     }
 
-    function renderColor(colorStr) {
-        if (!colorStr) return "";
-        const map = {"藍色": "#3b82f6", "白色": "#f8fafc", "綠色": "#22c55e", "紅色": "#ef4444", "黑色": "#111827", "紫色": "#a855f7"};
-        const hex = map[colorStr] || "#ccc";
-        return `<span class="color-circle" style="background-color: ${hex};"></span> ${colorStr}`;
+    // 3. 根據代表顏色，回傳背景色與文字色
+    function getTitleStyle(colorStr) {
+        if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;"; // 預設灰底黑字
+        const map = {
+            "藍色": { bg: "#3b82f6", text: "#ffffff", border: "#2563eb" },
+            "白色": { bg: "#f8fafc", text: "#0f172a", border: "#cbd5e1" }, // 白底黑字帶灰邊框
+            "綠色": { bg: "#22c55e", text: "#ffffff", border: "#16a34a" },
+            "紅色": { bg: "#ef4444", text: "#ffffff", border: "#dc2626" },
+            "黑色": { bg: "#1e293b", text: "#ffffff", border: "#0f172a" },
+            "紫色": { bg: "#a855f7", text: "#ffffff", border: "#9333ea" }
+        };
+        const style = map[colorStr] || map["白色"];
+        return `background-color: ${style.bg}; color: ${style.text}; border: 1px solid ${style.border};`;
     }
 
     window.onload = function() {
@@ -97,6 +112,7 @@
         if (!dateVal && !keywordVal) return;
 
         document.getElementById('resultContent').innerHTML = "<p>搜尋中...</p>";
+        document.getElementById('seasonMeaningHeader').innerHTML = ""; 
 
         if (dateVal) {
             findClosestData(dateVal);
@@ -160,6 +176,7 @@
             alertBox.style.color = '#b91c1c';
             alertBox.style.border = '1px solid #fecaca';
             document.getElementById('resultContent').innerHTML = "";
+            document.getElementById('seasonMeaningHeader').innerHTML = "";
         }
     }
 
@@ -182,6 +199,7 @@
             renderData(events);
         } else {
             document.getElementById('resultContent').innerHTML = "<p>找不到該日期的經課資料。</p>";
+            document.getElementById('seasonMeaningHeader').innerHTML = "";
         }
     }
 
@@ -197,7 +215,9 @@
                 html += `<hr style="margin: 30px 0; border: 0; border-top: 2px dashed #cbd5e1;">`;
             }
 
-            html += `<h3 style="margin: 0; margin-bottom: 15px;">${dataItem.title}</h3>`;
+            // 3. 改用帶有背景色的徽章 (Badge) 樣式
+            const titleStyle = getTitleStyle(dataItem.color);
+            html += `<div class="title-badge" style="${titleStyle}">${dataItem.title}</div>`;
                        
             html += `<div class="section-title">經課經文</div><div class="data-list">`;
             
@@ -253,25 +273,16 @@
             
             html += `</div>`; 
             
-            // 獨立的代表顏色區塊 (跟在每個聚會的後面)
-            if (dataItem.color) {
-                html += `<div class="meta" style="margin-bottom: 0; padding-bottom: 0;">`;
-                html += `<p style="margin-bottom: 0;"><strong>代表顏色：</strong> ${renderColor(dataItem.color)}</p>`;
-                html += `</div>`;
-            }
-
-            // 收集節期意義 (留在最下方)
             if (dataItem.meaning) {
                 allMeanings.add(dataItem.meaning);
             }
         });
 
-        // 在所有聚會的最後面，印出節期意義 (去重)
         if (allMeanings.size > 0) {
-            html += `<div class="meta">`;
             let meaningArray = Array.from(allMeanings);
-            html += `<p style="margin-bottom: 0;"><strong>節期意義：</strong> ${meaningArray.join(' / ')}</p>`;
-            html += `</div>`;
+            document.getElementById('seasonMeaningHeader').innerHTML = meaningArray.join(' / ');
+        } else {
+            document.getElementById('seasonMeaningHeader').innerHTML = "";
         }
 
         document.getElementById('resultContent').innerHTML = html;
