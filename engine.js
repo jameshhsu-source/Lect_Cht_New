@@ -193,7 +193,11 @@ class LectionaryEngine {
                 const proper_num = 30 - weeks_before_advent;
                 if (proper_num > 0) {
                     const zhNum = arabic_to_zh[proper_num.toString()] || proper_num.toString();
-                    events.push(["Ordinary Time", `Proper ${proper_num}`, `常年期第${zhNum}組經課`]);
+                    
+                    const weeks_after_pentecost = Math.floor(this.diffDays(anchors.pentecost, dt) / 7);
+                    const zhPentNum = arabic_to_zh[weeks_after_pentecost.toString()] || weeks_after_pentecost.toString();
+                    
+                    events.push(["Ordinary Time", `Proper ${proper_num}`, `常年期第${zhNum}組經課 (聖靈降臨後第${zhPentNum}主日)`]);
                 }
             }
         }
