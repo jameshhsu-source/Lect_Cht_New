@@ -35,7 +35,7 @@
         .hymn-list ul { list-style: none; padding-left: 0px; margin: 5px 0; }
         .hymn-list li { margin-bottom: 4px; }
 
-        /* 3. 新增節日標題徽章 (Badge) 樣式 */
+        /* 新增節日標題徽章 (Badge) 樣式 */
         .title-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -81,7 +81,7 @@
         return new Date(dateObj - tzOffset).toISOString().split('T')[0];
     }
 
-    // 3. 根據代表顏色，回傳背景色與文字色
+    // 根據代表顏色，回傳背景色與文字色
     function getTitleStyle(colorStr) {
         if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;"; // 預設灰底黑字
         const map = {
@@ -148,11 +148,8 @@
                     if (d >= mostRecentSunday && diff < minDiff) {
                         minDiff = diff;
                         closestDate = new Date(d);
-                        closestEvents = LectionaryEngine.getLectionary(d).filter(e => 
-                            e.title.includes(keyword) || 
-                            (seasonZhMap[e.season]||e.season).includes(keyword) || 
-                            e.season.includes(keyword)
-                        );
+                        // 修復 BUG: 找到匹配的日期後，應該把該日期的「所有」節日都列出來，而不是只保留標題有 keyword 的那一個
+                        closestEvents = LectionaryEngine.getLectionary(d);
                     }
                 }
             }
@@ -215,7 +212,7 @@
                 html += `<hr style="margin: 30px 0; border: 0; border-top: 2px dashed #cbd5e1;">`;
             }
 
-            // 3. 改用帶有背景色的徽章 (Badge) 樣式
+            // 改用帶有背景色的徽章 (Badge) 樣式
             const titleStyle = getTitleStyle(dataItem.color);
             html += `<div class="title-badge" style="${titleStyle}">${dataItem.title}</div>`;
                        
