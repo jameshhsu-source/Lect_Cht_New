@@ -271,8 +271,8 @@ class LectionaryEngine {
 
             results.push({
                 date: dateObj.toISOString().split('T')[0],
-                // 調整標題格式為：[甲/乙/丙年]．[節日或主日名稱]
-                title: `${cycleZhMap[cycle] || ""}．${rawName}`,
+                title: rawName,
+				cycleName: cycleZhMap[cycle] || "",
                 scriptures: structScriptures,
                 classical_hymns: cHymns,
                 modern_hymns: mHymns,

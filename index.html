@@ -16,8 +16,8 @@
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .search-area { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .search-area input { flex: 1; min-width: 140px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-        .search-area button { padding: 10px 20px; background-color: #94a3b8; color: black; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; flex-shrink: 0; min-width: 80px; }
-        .search-area button:hover { background-color: #64748b; }
+        .search-area button { padding: 10px 20px; background-color: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; flex-shrink: 0; min-width: 80px; }
+        .search-area button:hover { background-color: #e2e8f0; }
         .alert { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.95rem; display: none; }
         
         .header-area { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
@@ -34,6 +34,15 @@
         .hymn-list { margin-top: 5px; }
         .hymn-list ul { list-style: none; padding-left: 0px; margin: 5px 0; }
         .hymn-list li { margin-bottom: 4px; }
+
+        /* 讓有顏色的節期標籤滑鼠移上去時有手指圖示，並移除連結的底線 */
+        .season-badge-link {
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .season-badge-link:hover span {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -71,7 +80,7 @@
     }
 
     function getTitleStyle(colorStr) {
-        if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;";
+        if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 0px solid #cbd5e1;";
         const map = {
             "藍色": { bg: "#3b82f6", text: "#ffffff", border: "#2563eb" },
             "白色": { bg: "#f8fafc", text: "#0f172a", border: "#cbd5e1" },
@@ -199,7 +208,6 @@
                 html += `<hr style="margin: 30px 0; border: 0; border-top: 2px dashed #cbd5e1;">`;
             }
 
-            // 1. 去除背景，改回白底黑字 (加粗純文字標題)
             html += `<h3 style="margin: 0; margin-bottom: 15px; color: #1e293b; font-size: 1.25rem;">${dataItem.title}</h3>`;
                        
             html += `<div class="section-title">經課經文</div><div class="data-list">`;
@@ -256,24 +264,30 @@
             
             html += `</div>`; 
             
-            // 收集節期意義與對應的顏色
-            if (dataItem.meaning) {
+			if (dataItem.meaning) {
                 if (!allMeanings.has(dataItem.meaning)) {
-                    allMeanings.set(dataItem.meaning, dataItem.color);
+                    allMeanings.set(dataItem.meaning, {
+                        color: dataItem.color,
+                        cycleName: dataItem.cycleName
+                    });
                 }
             }
         });
 
-        // 2. 將收集到的意義，根據 '-' 切割並加上顏色標籤
-        if (allMeanings.size > 0) {
+		if (allMeanings.size > 0) {
             let meaningHTMLs = [];
-            for (let [meaning, color] of allMeanings.entries()) {
+            // 注意這裡從 color 變成 dataObj，用來接收顏色和年份
+            for (let [meaning, dataObj] of allMeanings.entries()) {
                 const parts = meaning.split('-');
                 if (parts.length >= 2) {
                     const seasonName = parts[0];
                     const desc = parts.slice(1).join('-');
-                    const badgeStyle = getTitleStyle(color);
-                    meaningHTMLs.push(`<span style="${badgeStyle} padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em; margin-right: 4px;">${seasonName}</span> - ${desc}`);
+                    const badgeStyle = getTitleStyle(dataObj.color);
+                    
+                    // 這裡負責把「x年．」加上去
+                    const fullBadgeText = dataObj.cycleName ? `${dataObj.cycleName}．${seasonName}` : seasonName;
+                    
+                    meaningHTMLs.push(`<a href="about_church_year.html" class="season-badge-link"><span style="${badgeStyle} padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em; margin-right: 4px;">${fullBadgeText}</span></a> - ${desc}`);
                 } else {
                     meaningHTMLs.push(meaning);
                 }
