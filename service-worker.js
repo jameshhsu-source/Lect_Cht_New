@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lectionary-cache-v1';
+const CACHE_NAME = 'lectionary-cache-v2';
 const urlsToCache = [
   './',
   './index.html',
