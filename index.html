@@ -16,8 +16,8 @@
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .search-area { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .search-area input { flex: 1; min-width: 140px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-        .search-area button { padding: 10px 20px; background-color: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; flex-shrink: 0; min-width: 80px; }
-        .search-area button:hover { background-color: #1d4ed8; }
+        .search-area button { padding: 10px 20px; background-color: #94a3b8; color: black; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; flex-shrink: 0; min-width: 80px; }
+        .search-area button:hover { background-color: #64748b; }
         .alert { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.95rem; display: none; }
         
         .header-area { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
@@ -25,7 +25,7 @@
         .about-link { color: #333; text-decoration: none; font-size: 0.85em; }
         .about-link:hover { text-decoration: underline; }
         
-        .season-meaning-header { font-size: 0.95rem; color: #64748b; margin-bottom: 20px; }
+        .season-meaning-header { font-size: 0.95rem; color: #64748b; margin-bottom: 20px; line-height: 1.8; }
 
         .section-title { font-weight: bold; color: #334155; margin-top: 20px; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; }
         .data-list { padding-left: 20px; margin-top: 10px; }
@@ -34,17 +34,6 @@
         .hymn-list { margin-top: 5px; }
         .hymn-list ul { list-style: none; padding-left: 0px; margin: 5px 0; }
         .hymn-list li { margin-bottom: 4px; }
-
-        /* 新增節日標題徽章 (Badge) 樣式 */
-        .title-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 1.17em; /* h3 size */
-            font-weight: bold;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
     </style>
 </head>
 <body>
@@ -81,12 +70,11 @@
         return new Date(dateObj - tzOffset).toISOString().split('T')[0];
     }
 
-    // 根據代表顏色，回傳背景色與文字色
     function getTitleStyle(colorStr) {
-        if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;"; // 預設灰底黑字
+        if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;";
         const map = {
             "藍色": { bg: "#3b82f6", text: "#ffffff", border: "#2563eb" },
-            "白色": { bg: "#f8fafc", text: "#0f172a", border: "#cbd5e1" }, // 白底黑字帶灰邊框
+            "白色": { bg: "#f8fafc", text: "#0f172a", border: "#cbd5e1" },
             "綠色": { bg: "#22c55e", text: "#ffffff", border: "#16a34a" },
             "紅色": { bg: "#ef4444", text: "#ffffff", border: "#dc2626" },
             "黑色": { bg: "#1e293b", text: "#ffffff", border: "#0f172a" },
@@ -148,7 +136,6 @@
                     if (d >= mostRecentSunday && diff < minDiff) {
                         minDiff = diff;
                         closestDate = new Date(d);
-                        // 修復 BUG: 找到匹配的日期後，應該把該日期的「所有」節日都列出來，而不是只保留標題有 keyword 的那一個
                         closestEvents = LectionaryEngine.getLectionary(d);
                     }
                 }
@@ -205,16 +192,15 @@
         if (alertBox) alertBox.style.display = 'none';
 
         let html = '';
-        let allMeanings = new Set();
+        let allMeanings = new Map();
 
         events.forEach((dataItem, index) => {
             if (index > 0) {
                 html += `<hr style="margin: 30px 0; border: 0; border-top: 2px dashed #cbd5e1;">`;
             }
 
-            // 改用帶有背景色的徽章 (Badge) 樣式
-            const titleStyle = getTitleStyle(dataItem.color);
-            html += `<div class="title-badge" style="${titleStyle}">${dataItem.title}</div>`;
+            // 1. 去除背景，改回白底黑字 (加粗純文字標題)
+            html += `<h3 style="margin: 0; margin-bottom: 15px; color: #1e293b; font-size: 1.25rem;">${dataItem.title}</h3>`;
                        
             html += `<div class="section-title">經課經文</div><div class="data-list">`;
             
@@ -270,14 +256,29 @@
             
             html += `</div>`; 
             
+            // 收集節期意義與對應的顏色
             if (dataItem.meaning) {
-                allMeanings.add(dataItem.meaning);
+                if (!allMeanings.has(dataItem.meaning)) {
+                    allMeanings.set(dataItem.meaning, dataItem.color);
+                }
             }
         });
 
+        // 2. 將收集到的意義，根據 '-' 切割並加上顏色標籤
         if (allMeanings.size > 0) {
-            let meaningArray = Array.from(allMeanings);
-            document.getElementById('seasonMeaningHeader').innerHTML = meaningArray.join(' / ');
+            let meaningHTMLs = [];
+            for (let [meaning, color] of allMeanings.entries()) {
+                const parts = meaning.split('-');
+                if (parts.length >= 2) {
+                    const seasonName = parts[0];
+                    const desc = parts.slice(1).join('-');
+                    const badgeStyle = getTitleStyle(color);
+                    meaningHTMLs.push(`<span style="${badgeStyle} padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em; margin-right: 4px;">${seasonName}</span> - ${desc}`);
+                } else {
+                    meaningHTMLs.push(meaning);
+                }
+            }
+            document.getElementById('seasonMeaningHeader').innerHTML = meaningHTMLs.join('<br>');
         } else {
             document.getElementById('seasonMeaningHeader').innerHTML = "";
         }
