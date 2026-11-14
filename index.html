@@ -75,15 +75,6 @@
 <script src="engine.js"></script>
 
 <script>
-	// --- 新增這段來啟動離線功能 ---
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(reg => console.log('ServiceWorker 註冊成功'))
-                .catch(err => console.log('ServiceWorker 註冊失敗: ', err));
-        });
-    }
-    // ----------------------------
     const seasonZhMap = {
         "Advent": "將臨期", "Christmas": "聖誕期", "Epiphany": "顯現期",
         "Lent": "預苦期", "Holy Week": "聖週", "Easter": "復活期",
