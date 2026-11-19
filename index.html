@@ -215,8 +215,9 @@
                 html += `<hr style="margin: 30px 0; border: 0; border-top: 2px dashed #cbd5e1;">`;
             }
 
-            html += `<h3 style="margin: 0; margin-bottom: 15px; color: #1e293b; font-size: 1.25rem;">${dataItem.title}</h3>`;
-                       
+			let displayTitle = dataItem.title.replace(" (", "<span style='display: inline-block;'> (") + (dataItem.title.includes(" (") ? "</span>" : "");
+            html += `<h3 style="margin: 0; margin-bottom: 15px; color: #1e293b; font-size: 1.25rem; line-height: 1.4;">${displayTitle}</h3>`;
+			
             html += `<div class="section-title">經課經文</div><div class="data-list">`;
             
             const scripts = dataItem.scriptures;
