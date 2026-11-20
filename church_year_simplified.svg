@@ -15,15 +15,15 @@
   <tspan x="277.52" dy="1.4em" font-weight="normal" font-size="10">12/24 ~ 隔年 1/5</tspan>
 </text>
 
-<!-- 3. 主顯日 (48° ~ 53°，沿半徑放射) -->
+<!-- 3. 主顯節 (48° ~ 53°，沿半徑放射) -->
 <path d="M 232.35 202.74 A 400 400 0 0 1 259.29 180.54 L 409.73 380.20 A 150 150 0 0 0 399.63 388.53 Z" fill="#ffffff" stroke="#333" stroke-width="2" />
-<text x="325.08" y="287.80" transform="rotate(50.50 325.08 287.80)" font-family="sans-serif" font-weight="bold" font-size="11" fill="black" text-anchor="middle" dominant-baseline="central">主顯日</text>
+<text x="325.08" y="287.80" transform="rotate(50.50 325.08 287.80)" font-family="sans-serif" font-weight="bold" font-size="11" fill="black" text-anchor="middle" dominant-baseline="central">主顯節</text>
 
 <!-- 4. 顯現期 (53° ~ 90°) -->
 <path d="M 259.29 180.54 A 400 400 0 0 1 500.00 100.00 L 500.00 350.00 A 150 150 0 0 0 409.73 380.20 Z" fill="#16a34a" stroke="#333" stroke-width="2" />
 <text x="412.74" y="239.21" transform="rotate(-18.50 412.74 239.21)" font-family="sans-serif" fill="white" text-anchor="middle">
   <tspan x="412.74" dy="-0.3em" font-weight="bold" font-size="24">顯現期</tspan>
-  <tspan x="412.74" dy="1.4em" font-weight="normal" font-size="11">主顯日(1/6) ~ 聖灰日</tspan>
+  <tspan x="412.74" dy="1.4em" font-weight="normal" font-size="11">主顯節(1/6) ~ 聖灰日</tspan>
 </text>
 
 <!-- 5. 聖灰日 (90° ~ 95°，沿半徑放射) -->
