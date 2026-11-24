@@ -47,11 +47,21 @@
             opacity: 0.9;
         }
 
-        /* 完讀日曆連結列樣式 */
+        /* 完讀日曆與年度計畫下載列樣式 */
         .cal-sync-line {
             margin-top: 10px;
             font-size: 0.9rem;
             color: #475569;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px 12px;
+        }
+        .cal-sync-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
         .cal-sync-line a {
             color: #2563eb;
@@ -66,7 +76,27 @@
             width: 16px;
             height: 16px;
             border-radius: 3px;
-            vertical-align: -3px;
+        }
+        .year-select {
+            padding: 1px 4px;
+            font-size: 0.85rem;
+            color: #1e293b;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .plan-gen-btn {
+            padding: 2px 8px;
+            font-size: 0.85rem;
+            background-color: #f1f5f9;
+            color: #334155;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .plan-gen-btn:hover {
+            background-color: #e2e8f0;
         }
     </style>
 </head>
@@ -197,6 +227,62 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    function getFirstSundayOfAdvent(year) {
+        const christmas = new Date(year, 11, 25);
+        const dayOfWeek = christmas.getDay();
+        const advent4 = new Date(year, 11, 25 - dayOfWeek);
+        return new Date(advent4.getFullYear(), advent4.getMonth(), advent4.getDate() - 21);
+    }
+
+    function downloadAnnualPlan() {
+        if (typeof DailyReadingPlan === 'undefined') return;
+
+        const selectEl = document.getElementById('planYearSelect');
+        const choice = selectEl ? selectEl.value : 'this';
+        const currentYear = new Date().getFullYear();
+        const targetChurchYear = (choice === 'next') ? currentYear + 1 : currentYear;
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+        const escapeCSV = (val) => {
+            const str = String(val ?? '');
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const lines = ['日期,星期,舊約,新約,詩篇／箴言,完讀'];
+        const start = getFirstSundayOfAdvent(targetChurchYear - 1);
+        const nextAdvent = getFirstSundayOfAdvent(targetChurchYear);
+        const end = new Date(nextAdvent.getFullYear(), nextAdvent.getMonth(), nextAdvent.getDate() - 1);
+
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const dateStr = `${y}/${m}/${day}`;
+            const weekdayStr = weekdays[d.getDay()];
+
+            const daily = DailyReadingPlan.getDailyReading(new Date(d)) || {};
+            const ot = (daily.ot || []).join('、');
+            const nt = (daily.nt || []).join('、');
+            const psPr = (daily.ps_pr || []).join('、');
+
+            lines.push([dateStr, weekdayStr, ot, nt, psPr, '□'].map(escapeCSV).join(','));
+        }
+
+        const csvContent = '\uFEFF' + lines.join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${targetChurchYear}教會年全年讀經計畫.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
     function getTitleStyle(colorStr) {
         if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 0px solid #cbd5e1;";
         const map = {
@@ -234,9 +320,15 @@
 
         if (!rows) return '';
 
+        const yearOptions = `
+            <option value="this" selected>今年</option>
+            <option value="next">明年</option>
+        `;
+
         const calendarLine = `
             <div class="cal-sync-line">
-                <img src="favicon.png" alt="" class="cal-mini-icon"> 讀完記錄至 <a href="#" onclick="addToGoogleCalendar(); return false;">Google</a> / <a href="#" onclick="addToAppleCalendar(); return false;">Apple</a> 日曆 <img src="favicon.png" alt="" class="cal-mini-icon">
+                <span class="cal-sync-item"><img src="favicon.png" alt="" class="cal-mini-icon"> 讀完記錄至 <a href="#" onclick="addToGoogleCalendar(); return false;">Google</a> / <a href="#" onclick="addToAppleCalendar(); return false;">Apple</a> 日曆 <img src="favicon.png" alt="" class="cal-mini-icon"></span>
+                <span class="cal-sync-item"><img src="favicon.png" alt="" class="cal-mini-icon"> <select id="planYearSelect" class="year-select" aria-label="選擇年份">${yearOptions}</select> 教會年讀經計畫 <button type="button" class="plan-gen-btn" onclick="downloadAnnualPlan()">產生</button> <img src="favicon.png" alt="" class="cal-mini-icon"></span>
             </div>
         `;
 
@@ -307,8 +399,8 @@
             document.getElementById('dateInput').value = dateStr;
             renderData(closestEvents, closestDate);
             alertBox.style.display = 'block';
-            const isPast = closestDate < today;
-            const timeText = isPast ? '最近一次' : '即將到來';
+            const isPastOrToday = closestDate <= today;
+            const timeText = isPastOrToday ? '最近一次' : '即將到來';
             alertBox.innerHTML = `為您找到${timeText}的「${keyword}」日期：<strong>${dateStr}</strong>`;
             alertBox.style.backgroundColor = '#dbeafe';
             alertBox.style.color = '#1e40af';
