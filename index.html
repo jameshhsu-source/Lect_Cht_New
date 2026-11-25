@@ -227,15 +227,38 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    function getFirstSundayOfAdvent(year) {
-        const christmas = new Date(year, 11, 25);
-        const dayOfWeek = christmas.getDay();
-        const advent4 = new Date(year, 11, 25 - dayOfWeek);
-        return new Date(advent4.getFullYear(), advent4.getMonth(), advent4.getDate() - 21);
+    function getLiturgicalSeasonZh(dt) {
+        const y = dt.getFullYear();
+        const m = dt.getMonth() + 1;
+        const d = dt.getDate();
+        const anchors = LectionaryEngine.getAnchors(y);
+
+        if (dt >= anchors.advent1) {
+            if (m === 12 && d >= 25) return seasonZhMap["Christmas"];
+            return seasonZhMap["Advent"];
+        }
+        if (m === 1 && d < 6) return seasonZhMap["Christmas"];
+        if (dt < anchors.ash_wednesday) return seasonZhMap["Epiphany"];
+        if (dt < anchors.palm_sunday) return seasonZhMap["Lent"];
+        if (dt < anchors.easter) return seasonZhMap["Holy Week"];
+        if (dt < anchors.pentecost) return seasonZhMap["Easter"];
+        if (dt < anchors.trinity) return seasonZhMap["Pentecost"];
+        return seasonZhMap["Ordinary Time"];
+    }
+
+    function getLiturgicalDayOrSeason(dt) {
+        const events = LectionaryEngine.getLectionary(dt);
+        if (events && events.length > 0) {
+            const daytimeEvents = events.filter(e => !e.is_evening);
+            if (daytimeEvents.length > 0) {
+                return daytimeEvents.map(e => e.title).join('／');
+            }
+        }
+        return getLiturgicalSeasonZh(dt);
     }
 
     function downloadAnnualPlan() {
-        if (typeof DailyReadingPlan === 'undefined') return;
+        if (typeof DailyReadingPlan === 'undefined' || typeof LectionaryEngine === 'undefined') return;
 
         const selectEl = document.getElementById('planYearSelect');
         const choice = selectEl ? selectEl.value : 'this';
@@ -251,24 +274,28 @@
             return str;
         };
 
-        const lines = ['日期,星期,舊約,新約,詩篇／箴言,完讀'];
-        const start = getFirstSundayOfAdvent(targetChurchYear - 1);
-        const nextAdvent = getFirstSundayOfAdvent(targetChurchYear);
+        const formatWithBox = (arr) => (arr || []).map(item => `□${item}`).join('、');
+
+        const lines = ['日期,星期,舊約,新約,詩篇／箴言,當天完讀,節期或節日'];
+        const start = LectionaryEngine.calculateAdvent1(targetChurchYear - 1);
+        const nextAdvent = LectionaryEngine.calculateAdvent1(targetChurchYear);
         const end = new Date(nextAdvent.getFullYear(), nextAdvent.getMonth(), nextAdvent.getDate() - 1);
 
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
+            const curDate = new Date(d);
+            const y = curDate.getFullYear();
+            const m = String(curDate.getMonth() + 1).padStart(2, '0');
+            const day = String(curDate.getDate()).padStart(2, '0');
             const dateStr = `${y}/${m}/${day}`;
-            const weekdayStr = weekdays[d.getDay()];
+            const weekdayStr = weekdays[curDate.getDay()];
 
-            const daily = DailyReadingPlan.getDailyReading(new Date(d)) || {};
-            const ot = (daily.ot || []).join('、');
-            const nt = (daily.nt || []).join('、');
-            const psPr = (daily.ps_pr || []).join('、');
+            const daily = DailyReadingPlan.getDailyReading(curDate) || {};
+            const ot = formatWithBox(daily.ot);
+            const nt = formatWithBox(daily.nt);
+            const psPr = formatWithBox(daily.ps_pr);
+            const seasonOrDay = getLiturgicalDayOrSeason(curDate);
 
-            lines.push([dateStr, weekdayStr, ot, nt, psPr, '□'].map(escapeCSV).join(','));
+            lines.push([dateStr, weekdayStr, ot, nt, psPr, '□', seasonOrDay].map(escapeCSV).join(','));
         }
 
         const csvContent = '\uFEFF' + lines.join('\r\n');
@@ -328,7 +355,7 @@
         const calendarLine = `
             <div class="cal-sync-line">
                 <span class="cal-sync-item"><img src="favicon.png" alt="" class="cal-mini-icon"> 讀完記錄至 <a href="#" onclick="addToGoogleCalendar(); return false;">Google</a> / <a href="#" onclick="addToAppleCalendar(); return false;">Apple</a> 日曆 <img src="favicon.png" alt="" class="cal-mini-icon"></span>
-                <span class="cal-sync-item"><img src="favicon.png" alt="" class="cal-mini-icon"> <select id="planYearSelect" class="year-select" aria-label="選擇年份">${yearOptions}</select> 教會年讀經計畫 <button type="button" class="plan-gen-btn" onclick="downloadAnnualPlan()">產生</button> <img src="favicon.png" alt="" class="cal-mini-icon"></span>
+                <span class="cal-sync-item"><img src="favicon.png" alt="" class="cal-mini-icon"> <button type="button" class="plan-gen-btn" onclick="downloadAnnualPlan()">產生</button> <select id="planYearSelect" class="year-select" aria-label="選擇年份">${yearOptions}</select> 讀經計畫 <img src="favicon.png" alt="" class="cal-mini-icon"></span>
             </div>
         `;
 

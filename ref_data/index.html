@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="三代經課" />
+    <meta property="og:description" content="提供每週三代經課經文，並推薦傳統聖詩與現代詩歌。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://jameshhsu-source.github.io/Lect_Cht_New/" />
+    <meta property="og:image" content="https://jameshhsu-source.github.io/Lect_Cht_New/og-image.png" />
+    <meta property="og:site_name" content="三代經課" />
+    <title>三代經課</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+	<link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+		body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 15px; line-height: 1.6; background-color: #f8fafc; color: #1e293b; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+		.search-area { display: flex; gap: 8px; flex-wrap: nowrap; margin-bottom: 20px; }
+        #dateInput { flex: 2; min-width: 0; padding: 10px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; }
+        #keywordInput { flex: 1; min-width: 0; padding: 10px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; }
+        .search-area button { padding: 10px 12px; background-color: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; flex-shrink: 0; }
+        .search-area button:hover { background-color: #e2e8f0; }
+        .alert { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.95rem; display: none; }        
+        .header-area { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+        h2 { color: #0f172a; margin: 0; }
+        .about-link { color: #333; text-decoration: none; font-size: 0.85em; }
+        .about-link:hover { text-decoration: underline; }
+        
+        .season-meaning-header { font-size: 0.95rem; color: #64748b; margin-bottom: 20px; line-height: 1.8; }
+
+        .section-title { font-weight: bold; color: #334155; margin-top: 20px; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; }
+        .data-list { padding-left: 20px; margin-top: 10px; }
+        .meta { margin-top: 20px; font-size: 0.95rem; border-top: 1px dashed #cbd5e1; padding-top: 15px; }
+        a { color: #2563eb; text-decoration: none; word-break: break-all; }
+        .hymn-list { margin-top: 5px; }
+        .hymn-list ul { list-style: none; padding-left: 0px; margin: 5px 0; }
+        .hymn-list li { margin-bottom: 4px; }
+
+        /* 讓有顏色的節期標籤滑鼠移上去時有手指圖示，並移除連結的底線 */
+        .season-badge-link {
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .season-badge-link:hover span {
+            opacity: 0.9;
+        }
+
+        /* 完讀日曆與年度計畫下載列樣式 */
+        .cal-sync-line {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #475569;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px 12px;
+        }
+        .cal-sync-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .cal-sync-line a {
+            color: #2563eb;
+            text-decoration: underline;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .cal-sync-line a:hover {
+            color: #1d4ed8;
+        }
+        .cal-mini-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        .year-select {
+            padding: 1px 4px;
+            font-size: 0.85rem;
+            color: #1e293b;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .plan-gen-btn {
+            padding: 2px 8px;
+            font-size: 0.85rem;
+            background-color: #f1f5f9;
+            color: #334155;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .plan-gen-btn:hover {
+            background-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+	<div class="header-area">
+		<h2 style="display: flex; align-items: center; gap: 10px;">
+			三代經課
+			<img src="favicon.png" alt="logo" style="width: 32px; height: 32px; border-radius: 6px;">
+		</h2>
+		<a href="about_church_year.html" class="about-link">關於教會年</a>
+	</div>
+    
+    <div id="seasonMeaningHeader" class="season-meaning-header"></div>
+    
+    <div class="search-area">
+        <input type="date" id="dateInput" oninput="document.getElementById('keywordInput').value=''" title="選擇日期">
+        <input type="text" id="keywordInput" placeholder="節日關鍵字" oninput="document.getElementById('dateInput').value=''">
+        <button onclick="handleSearch()">查詢</button>
+    </div>
+    <div id="alertBox" class="alert"></div>
+	<div id="resultContent">載入引擎中...</div>    
+	<div style="margin-top: 30px; text-align: center; font-size: 0.75rem; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 15px; line-height: 1.6;">
+        經課經文編排源自 CCT：<br>
+        The Lectionary scripture citations are based on the <i>Revised Common Lectionary</i>, copyright © 1992 Consultation on Common Texts. Used by permission. <a href="http://www.commontexts.org" target="_blank" style="color: #94a3b8; text-decoration: underline;">www.commontexts.org</a>.<br>
+        <span style="display: inline-block; margin-top: 5px; color: #94a3b8;">教會年曆節期推算依循大公教會傳統，全年讀經計畫與聖詩建議為本系統另行增編，均非屬 CCT 授權範圍。</span>
+    </div>
+</div>
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="daily_plan.js"></script>
+
+<script>
+    const seasonZhMap = {
+        "Advent": "將臨期", "Christmas": "聖誕期", "Epiphany": "顯現期",
+        "Lent": "預苦期", "Holy Week": "聖週", "Easter": "復活期",
+        "Pentecost": "聖靈降臨期", "Ordinary Time": "常年期"
+    };
+
+    window._currentDailyReading = null;
+
+    function getLocalDateString(dateObj) {
+        const tzOffset = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj - tzOffset).toISOString().split('T')[0];
+    }
+
+    function formatCompactDate(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}${m}${d}`;
+    }
+
+    function buildCalendarPayload() {
+        const current = window._currentDailyReading;
+        if (!current || !current.dateObj || !current.daily) return null;
+
+        const { dateObj, daily } = current;
+        const allParts = [
+            ...(daily.ot || []),
+            ...(daily.nt || []),
+            ...(daily.ps_pr || [])
+        ];
+        if (allParts.length === 0) return null;
+
+        const title = `已讀完：${allParts.join('、')}`;
+
+        const startStr = formatCompactDate(dateObj);
+        const nextDayObj = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() + 1);
+        const endStr = formatCompactDate(nextDayObj);
+
+        return {
+            title,
+            startStr,
+            endStr
+        };
+    }
+
+    function addToGoogleCalendar() {
+        const payload = buildCalendarPayload();
+        if (!payload) return;
+
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+            `&text=${encodeURIComponent(payload.title)}` +
+            `&dates=${payload.startStr}/${payload.endStr}`;
+
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function addToAppleCalendar() {
+        const payload = buildCalendarPayload();
+        if (!payload) return;
+
+        const escapeICS = (str) => str
+            .replace(/\\/g, '\\\\')
+            .replace(/;/g, '\\;')
+            .replace(/,/g, '\\,')
+            .replace(/\n/g, '\\n');
+
+        const now = new Date();
+        const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const uid = `lect-cht-${payload.startStr}-${Date.now()}@jameshhsu-source.github.io`;
+
+        const icsContent = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Lect_Cht_New//Daily Bible Reading//ZH',
+            'CALSCALE:GREGORIAN',
+            'BEGIN:VEVENT',
+            `UID:${uid}`,
+            `DTSTAMP:${dtstamp}`,
+            `DTSTART;VALUE=DATE:${payload.startStr}`,
+            `DTEND;VALUE=DATE:${payload.endStr}`,
+            `SUMMARY:${escapeICS(payload.title)}`,
+            'END:VEVENT',
+            'END:VCALENDAR'
+        ].join('\r\n');
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `讀經完讀_${payload.startStr}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function getFirstSundayOfAdvent(year) {
+        const christmas = new Date(year, 11, 25);
+        const dayOfWeek = christmas.getDay();
+        const advent4 = new Date(year, 11, 25 - dayOfWeek);
+        return new Date(advent4.getFullYear(), advent4.getMonth(), advent4.getDate() - 21);
+    }
+
+    function downloadAnnualPlan() {
+        if (typeof DailyReadingPlan === 'undefined') return;
+
+        const selectEl = document.getElementById('planYearSelect');
+        const choice = selectEl ? selectEl.value : 'this';
+        const currentYear = new Date().getFullYear();
+        const targetChurchYear = (choice === 'next') ? currentYear + 1 : currentYear;
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+        const escapeCSV = (val) => {
+            const str = String(val ?? '');
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const lines = ['日期,星期,舊約,新約,詩篇／箴言,完讀'];
+        const start = getFirstSundayOfAdvent(targetChurchYear - 1);
+        const nextAdvent = getFirstSundayOfAdvent(targetChurchYear);
+        const end = new Date(nextAdvent.getFullYear(), nextAdvent.getMonth(), nextAdvent.getDate() - 1);
+
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const dateStr = `${y}/${m}/${day}`;
+            const weekdayStr = weekdays[d.getDay()];
+
+            const daily = DailyReadingPlan.getDailyReading(new Date(d)) || {};
+            const ot = (daily.ot || []).join('、');
+            const nt = (daily.nt || []).join('、');
+            const psPr = (daily.ps_pr || []).join('、');
+
+            lines.push([dateStr, weekdayStr, ot, nt, psPr, '□'].map(escapeCSV).join(','));
+        }
+
+        const csvContent = '\uFEFF' + lines.join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${targetChurchYear}教會年全年讀經計畫.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function getTitleStyle(colorStr) {
+        if (!colorStr) return "background-color: #f1f5f9; color: #334155; border: 0px solid #cbd5e1;";
+        const map = {
+            "藍色": { bg: "#3b82f6", text: "#ffffff", border: "#2563eb" },
+            "白色": { bg: "#f8fafc", text: "#0f172a", border: "#cbd5e1" },
+            "綠色": { bg: "#22c55e", text: "#ffffff", border: "#16a34a" },
+            "紅色": { bg: "#ef4444", text: "#ffffff", border: "#dc2626" },
+            "黑色": { bg: "#1e293b", text: "#ffffff", border: "#0f172a" },
+            "紫色": { bg: "#a855f7", text: "#ffffff", border: "#9333ea" }
+        };
+        const style = map[colorStr] || map["白色"];
+        return `background-color: ${style.bg}; color: ${style.text}; border: 1px solid ${style.border};`;
+    }
+
+    function buildDailyReadingHTML(dateObj) {
+        if (!dateObj || typeof DailyReadingPlan === 'undefined') return '';
+
+        const daily = DailyReadingPlan.getDailyReading(dateObj);
+        if (!daily) return '';
+
+        window._currentDailyReading = { dateObj, daily };
+
+        const linkList = (arr) => arr.map(item => LectionaryEngine.processScriptureLinks(item)).join('、');
+
+        let rows = '';
+        if (daily.ot && daily.ot.length > 0) {
+            rows += `<div style="margin-bottom: 4px;">${linkList(daily.ot)}</div>`;
+        }
+        if (daily.nt && daily.nt.length > 0) {
+            rows += `<div style="margin-bottom: 4px;">${linkList(daily.nt)}</div>`;
+        }
+        if (daily.ps_pr && daily.ps_pr.length > 0) {
+            rows += `<div style="margin-bottom: 4px;">${linkList(daily.ps_pr)}</div>`;
+        }
+
+        if (!rows) return '';
+
+        const yearOptions = `
+            <option value="this" selected>今年</option>
+            <option value="next">明年</option>
+        `;
+
+        const calendarLine = `
+            <div class="cal-sync-line">
+                <span class="cal-sync-item"><img src="favicon.png" alt="" class="cal-mini-icon"> 讀完記錄至 <a href="#" onclick="addToGoogleCalendar(); return false;">Google</a> / <a href="#" onclick="addToAppleCalendar(); return false;">Apple</a> 日曆 <img src="favicon.png" alt="" class="cal-mini-icon"></span>
+                <span class="cal-sync-item"><img src="favicon.png" alt="" class="cal-mini-icon"> <select id="planYearSelect" class="year-select" aria-label="選擇年份">${yearOptions}</select><button type="button" class="plan-gen-btn" onclick="downloadAnnualPlan()">讀經計畫匯出</button> <img src="favicon.png" alt="" class="cal-mini-icon"></span>
+            </div>
+        `;
+
+        return `<div class="section-title">全年讀經</div><div class="data-list">${rows}${calendarLine}</div>`;
+    }
+
+    window.onload = function() {
+        const todayObj = new Date();
+        const todayStr = getLocalDateString(todayObj);
+        document.getElementById('dateInput').value = todayStr;
+        document.getElementById('keywordInput').value = ''; 
+        
+        handleSearch();
+    }
+
+    function handleSearch() {
+        const dateVal = document.getElementById('dateInput').value;
+        const keywordVal = document.getElementById('keywordInput').value.trim();
+
+        if (!dateVal && !keywordVal) return;
+
+        document.getElementById('resultContent').innerHTML = "<p>搜尋中...</p>";
+        document.getElementById('seasonMeaningHeader').innerHTML = ""; 
+
+        if (dateVal) {
+            findClosestData(dateVal);
+        } else if (keywordVal) {
+            searchByKeyword(keywordVal);
+        }
+    }
+
+    function searchByKeyword(keyword) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        const dayOfWeek = today.getDay(); 
+        const mostRecentSunday = new Date(today);
+        mostRecentSunday.setDate(today.getDate() - dayOfWeek);
+        
+        let minDiff = Infinity;
+        let closestDate = null;
+        let closestEvents = null;
+        
+        const startDate = new Date(today.getFullYear() - 1, 0, 1);
+        const endDate = new Date(today.getFullYear() + 1, 11, 31);
+        
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const eventsInfo = LectionaryEngine.identifyDay(d);
+            if (eventsInfo) {
+                const hasMatch = eventsInfo.some(evt => {
+                    const seasonZh = seasonZhMap[evt[0]] || evt[0];
+                    return evt[2].includes(keyword) || seasonZh.includes(keyword) || evt[1].includes(keyword);
+                });
+                
+                if (hasMatch) {
+                    const diff = Math.abs(d - today);
+                    if (d >= mostRecentSunday && diff < minDiff) {
+                        minDiff = diff;
+                        closestDate = new Date(d);
+                        closestEvents = LectionaryEngine.getLectionary(d);
+                    }
+                }
+            }
+        }
+        
+        const alertBox = document.getElementById('alertBox');
+        if (closestEvents && closestEvents.length > 0) {
+            const dateStr = getLocalDateString(closestDate);
+            document.getElementById('dateInput').value = dateStr;
+            renderData(closestEvents, closestDate);
+            alertBox.style.display = 'block';
+            const isPastOrToday = closestDate <= today;
+            const timeText = isPastOrToday ? '最近一次' : '即將到來';
+            alertBox.innerHTML = `為您找到${timeText}的「${keyword}」日期：<strong>${dateStr}</strong>`;
+            alertBox.style.backgroundColor = '#dbeafe';
+            alertBox.style.color = '#1e40af';
+            alertBox.style.border = '1px solid #bfdbfe';
+        } else {
+            alertBox.style.display = 'block';
+            alertBox.innerHTML = `找不到「${keyword}」相關的主日或節日名稱。`;
+            alertBox.style.backgroundColor = '#fee2e2';
+            alertBox.style.color = '#b91c1c';
+            alertBox.style.border = '1px solid #fecaca';
+            document.getElementById('resultContent').innerHTML = "";
+            document.getElementById('seasonMeaningHeader').innerHTML = "";
+        }
+    }
+
+    function findClosestData(targetDateStr) {
+        const parts = targetDateStr.split('-');
+        const originalDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        let searchDate = new Date(originalDate.valueOf());
+        
+        let events = LectionaryEngine.getLectionary(searchDate);
+        if (events) {
+            renderData(events, originalDate);
+            return;
+        }
+
+        let dayOfWeek = searchDate.getDay();
+        let diffToSunday = dayOfWeek === 0 ? 0 : dayOfWeek;
+        searchDate.setDate(searchDate.getDate() - diffToSunday); 
+        
+        events = LectionaryEngine.getLectionary(searchDate);
+        if (events) {
+            renderData(events, originalDate);
+        } else {
+            document.getElementById('resultContent').innerHTML = "<p>找不到該日期的經課資料。</p>";
+            document.getElementById('seasonMeaningHeader').innerHTML = "";
+        }
+    }
+
+    function renderData(events, targetDateObj) {
+        const alertBox = document.getElementById('alertBox');
+        if (alertBox) alertBox.style.display = 'none';
+
+        let html = '';
+        let allMeanings = new Map();
+        const dailyHTML = buildDailyReadingHTML(targetDateObj);
+
+        events.forEach((dataItem, index) => {
+            if (index > 0) {
+                html += `<hr style="margin: 30px 0; border: 0; border-top: 2px dashed #cbd5e1;">`;
+            }
+
+			let displayTitle = dataItem.title.replace(" (", "<span style='display: inline-block;'> (") + (dataItem.title.includes(" (") ? "</span>" : "");
+            html += `<h3 style="margin: 0; margin-bottom: 15px; color: #1e293b; font-size: 1.25rem; line-height: 1.4;">${displayTitle}</h3>`;
+			
+            html += `<div class="section-title">經課經文</div><div class="data-list">`;
+            
+            const scripts = dataItem.scriptures;
+            
+            if (scripts.general && scripts.general.length > 0) {
+                scripts.general.forEach(item => html += `<div style="margin-bottom: 4px;">${item}</div>`);
+            }
+            
+            const hasDualTracks = (scripts.track_semi_continuous && scripts.track_semi_continuous.length > 0) || 
+                                  (scripts.track_complementary && scripts.track_complementary.length > 0);
+            
+            if (hasDualTracks) {
+                html += `<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px;">`;
+                if (scripts.track_semi_continuous && scripts.track_semi_continuous.length > 0) {
+                    html += `<div style="flex: 1; min-width: 250px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">`;
+                    html += `<div style="font-weight: bold; margin-bottom: 8px;">【半連續式】</div>`;
+                    scripts.track_semi_continuous.forEach(item => html += `<div style="margin-bottom: 4px;">${item}</div>`);
+                    html += `</div>`;
+                }
+                if (scripts.track_complementary && scripts.track_complementary.length > 0) {
+                    html += `<div style="flex: 1; min-width: 250px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">`;
+                    html += `<div style="font-weight: bold; margin-bottom: 8px;">【呼應式】</div>`;
+                    scripts.track_complementary.forEach(item => html += `<div style="margin-bottom: 4px;">${item}</div>`);
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            }
+            
+            html += `</div>`;
+
+            if (index === 0 && dailyHTML) {
+                html += dailyHTML;
+            }
+
+            html += `<div class="section-title">詩歌</div>`;
+            html += `<div class="data-list">`; 
+            
+            let hasHymns = false;
+            let hymnsListHTML = '';
+
+            if (dataItem.classical_hymns && dataItem.classical_hymns.length > 0) {
+                dataItem.classical_hymns.forEach(hymn => hymnsListHTML += `<li>${hymn}</li>`);
+                hasHymns = true;
+            }
+            
+            if (dataItem.modern_hymns && dataItem.modern_hymns.length > 0) {
+                dataItem.modern_hymns.forEach(hymn => hymnsListHTML += `<li>${hymn}</li>`);
+                hasHymns = true;
+            }
+
+            if (hasHymns) {
+                html += `<div class="hymn-list"><ul>${hymnsListHTML}</ul></div>`;
+            } else {
+                html += `<ul><li style="color:#94a3b8; list-style:none;">(無對應詩歌)</li></ul>`;
+            }
+            
+            html += `</div>`; 
+            
+			if (dataItem.meaning) {
+                if (!allMeanings.has(dataItem.meaning)) {
+                    allMeanings.set(dataItem.meaning, {
+                        color: dataItem.color,
+                        cycleName: dataItem.cycleName
+                    });
+                }
+            }
+        });
+
+		if (allMeanings.size > 0) {
+            let meaningHTMLs = [];
+            for (let [meaning, dataObj] of allMeanings.entries()) {
+                const parts = meaning.split('-');
+                if (parts.length >= 2) {
+                    const seasonName = parts[0];
+                    const desc = parts.slice(1).join('-');
+                    const badgeStyle = getTitleStyle(dataObj.color);
+                    const fullBadgeText = dataObj.cycleName ? `${dataObj.cycleName}．${seasonName}` : seasonName;
+                    meaningHTMLs.push(`<a href="about_church_year.html" class="season-badge-link"><span style="${badgeStyle} padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em; margin-right: 4px;">${fullBadgeText}</span></a> ${desc}`);
+                } else {
+                    meaningHTMLs.push(meaning);
+                }
+            }
+            document.getElementById('seasonMeaningHeader').innerHTML = meaningHTMLs.join('<br>');
+        } else {
+            document.getElementById('seasonMeaningHeader').innerHTML = "";
+        }
+
+        document.getElementById('resultContent').innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
