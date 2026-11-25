@@ -248,7 +248,7 @@ class LectionaryEngine {
             });
 
             if (lookupSunday === "Thanksgiving") {
-                structScriptures.general.push("太18:18 我實在告訴你們，凡你們在地上所捆綁的，在天上也要捆綁；凡你們在地上所釋放的，在天上也要釋放。");
+                structScriptures.general.push("🦃太18:18 我實在告訴你們，凡你們在地上所捆綁的，在天上也要捆綁；凡你們在地上所釋放的，在天上也要釋放。🦃");
             }
 
             const wrapYtLink = (h) => {
